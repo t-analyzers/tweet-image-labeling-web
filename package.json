@@ -1,0 +1,16 @@
+{
+  "name": "nps-tweets",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "dev"
+  },
+  "author": "hitoshi",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^2.5.5",
+    "express": "^4.14.1",
+    "mongodb": "^2.2.22"
+  }
+}
