@@ -76,18 +76,14 @@ router.get( '/tweets/img/date/:date', function ( req, res ) {
 					};
 
 					//media_urlが見つかったら返却対象
-//					var tmp = tw.entities;
 					var tmp = tw.entities.media;
 					if(tmp != undefined){
-//						tmp = tmp.media;
-//						if(tmp != undefined){
-							var m_url = tmp[0].media_url;
-							//当該URLが新規の場合は返却対象とする(rltsに入れる)
-							if(is_existed_in_tweets(m_url, rlts) == false){
-								rlt['media_url'] = m_url;
-								rlts.push(rlt);
-							}
-//						}
+						var m_url = tmp[0].media_url;
+						//当該URLが新規の場合は返却対象とする(rltsに入れる)
+						if(is_existed_in_tweets(m_url, rlts) == false){
+							rlt['media_url'] = m_url;
+							rlts.push(rlt);
+						}
 					}
 				}
 
@@ -104,7 +100,7 @@ router.get( '/tweets/img/date/:date', function ( req, res ) {
 						}
 					}
 
-					//tweetsを返す
+					//最終的に条件にマッチしたtweetsを返す
 					res.send(tweets);
 				});
 
@@ -125,7 +121,7 @@ function is_existed_in_tweets(url, tweets){
 }
 
 //tweet内のURLがCOL_LABELSに含まれているかどうかチェックしtrue or falseで返す
-function is_exist_in_labels(tweet){
+function is_existed_in_labels(tweet){
 	return new Promise(function(resolve, reject){
 			var is_existed = false;
 			var cnt = 0;
@@ -177,61 +173,20 @@ router.post('/img_label',function(req,res){
 		{"url": req.body['url']},{},
 		function(err,lbl){
 			if(err){//errがnull以外の場合 -> mongodbでエラーになった
-				res.send("{'result':"+ err +"}");
+				res.send({'result':　err});
 			}else if(lbl){ //lblがnull以外の場合 -> すでに存在している
-				res.send("{'result': 'exist'}");
+				res.send({'result': 'exist'});
 			}else{
 				collection(COL_LABELS).insertOne(
 					label,
 					{'forceServerObjectId':true},
 					function(err, r){
-						res.send("{'result':"+ r.result.ok +"}");
+						res.send({"result": r.result.ok});
 					}
 				);	
 			}
 		}
 	);
 });
-
-// router.post('/img_label',function(req,res){
-// 	//console.log(req.body);
-// 	//console.log(req.body['_id']);
-// 	var label = req.body;
-// 	collection(COL_TWEETS).findOne(
-// 		{"_id": new ObjectID(req.body['_id']) },{},
-// 		function(err, tw){
-// 			console.log(tw);
-// 			delete label.twid;
-// 			collection(COL_LABELS).insertOne(
-// 				label,
-// 				{'forceServerObjectId':true},
-// 				function(err, r){
-// 					res.send("{'result':"+ r.result.ok +"}");
-// 				}
-// 			);		
-// 		}
-// 	);
-// });
-
-//GET find tweet
-// router.get( '/tweets/:user/:id', function ( req, res ) {
-//     var user = req.params.user;
-// 	var id = req.params.id;
-// 	//console.log("user:" + user + "   id:" + id);
-// 	collection(COL_TWEETS).find(
-// 		{"user.screen_name": user, "id_str": id}).toArray(function(err, tws){
-// 			var tw = tws[0];
-// 			var rlt = {
-// 				'created_datetime':tw.created_datetime,
-// 				'retweet_count':tw.retweet_count,
-// 				'id': tw.id_str,
-// 				'user.screen_name': tw.user.screen_name,
-// 				'text':tw.text
-// 			};		
-// 			res.send(rlt);
-// 		});
-// 	}
-// );
-
 
 module.exports = router;

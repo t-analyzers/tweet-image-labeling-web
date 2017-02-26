@@ -2,7 +2,7 @@ var API_URL_TOP = location.protocol + "//" + location.host + "/api/";
 var TWEET_URL_ENDPOINT = API_URL_TOP + "tweets";
 var LABEL_URL_ENDPOINT = API_URL_TOP + "img_label";
 
-var ANNOTATION_LABEL_ELEMENTS = {"illust":"イラスト", "photo":"写真", "text":"文字", "calendar":"カレンダー", "placard":"プラカード", "manga":"漫画","capture":"キャプチャ","icon":"アイコン"};
+var ANNOTATION_LABEL_ELEMENTS = {"illust":"イラスト", "photo":"写真", "text":"文字", "calendar":"カレンダー", "cover":"カバー","placard":"プラカード", "manga":"漫画","capture":"キャプチャ","icon":"アイコン","craft":"ペーパークラフト"};
 var ADULT_LABEL_ELEMENTS = {"false":"No", "true":"Yes", "possible":"Possible"};
 
 $(document).ready(function(){
@@ -46,7 +46,7 @@ function show_tweets_img(str_date){
 					var pid = tweets[i]["PrintID"];
 
 					//col用とcard用のdiv start
-					html_card = "<div class='col s12 m6 l3'><div class='card'>";
+					html_card = "<div class='col s12 m6 l4'><div class='card'>";
 
 					//card-imageのタグ作成
 					html_card += "<div class='card-image'>";
@@ -95,16 +95,18 @@ function show_tweets_img(str_date){
 
 			//更新ボタンのクリックイベント追加
 			$(".btn").on("click", function(elem){
+				var card_content = $(elem.target).parent();
 				$.ajax({
-					ype: "GET",
-					url: TWEET_URL_ENDPOINT+"/"+$(elem.target).parent().data("twid"),
+					type: "GET",
+					url: TWEET_URL_ENDPOINT+"/"+card_content.data("twid"),
 					dataType: "json",
 					success: function(tweet) {
 						//対象ツイートを取得して教師データに必要な項目を取得する
-						var img_label = {//"_id": tweet["_id"],
+						var img_label = {
 								"screen_name": tweet["user"]["screen_name"], 
 								"id": tweet["id"],
-								"url": tweet["entities"]["media"][0]["media_url"]};
+								"url": tweet["entities"]["media"][0]["media_url"]
+							};
 						
 						var labels = [];
 						var adult = $(elem.target).parents().find("[name='adult']:checked").val();
@@ -112,7 +114,7 @@ function show_tweets_img(str_date){
 							labels.push($(this).val());
 						});
 
-						img_label["annotation"] = {"adult":adult, "labels":labels};
+						img_label["annotation"] = {"adult": adult, "labels":labels};
 						
 						//教師データ用のテーブルに投入する
 						$.ajax({
@@ -120,11 +122,14 @@ function show_tweets_img(str_date){
 							url: LABEL_URL_ENDPOINT,
 							dataType: "json",
 							data: img_label,
-							success: function(result) {
-								alter(JSON.stringify(result));
+							success: function(data,txt) {
+								card_content.html("登録済み");
+								//alert(data["result"]);
+							},
+							error(xhr,txt,e){
+								alert(e);
 							}
 						});
-
 					}
 				});
 			});
@@ -132,15 +137,12 @@ function show_tweets_img(str_date){
 	});
 }
 
-
-
 /**
  * @returns
  */
 function annotation_form(id){
-
-	var html = "<p>属性</p>";
-	html += "<form action='#' data-twid ='" + id + "'>";
+	var html = "<form action='#' data-twid ='" + id + "'>";
+	html += "<p>属性</p>";
 	for(k in ANNOTATION_LABEL_ELEMENTS){
 	    html += "<p><input name='annotation' type='checkbox' class='filled-in' id='" + k + "_" + id + "' value='" + k + "'/>" + 
       	"<label for='" + k + "_" + id + "'>" + ANNOTATION_LABEL_ELEMENTS[k] + "</label></p>";
@@ -150,7 +152,7 @@ function annotation_form(id){
 
 	for(k in ADULT_LABEL_ELEMENTS){
 		var checked = "";
-		if(k=="false"){ checked = "checked";}
+		if(k=="false"){ checked = "checked='checked'";}
 		html += "<p><input name='adult' type='radio' id='" + k + "_" + id + "' value='" + k + "' " + checked + " />" +
 	    	"<label for='" + k + "_" + id + "'>" + ADULT_LABEL_ELEMENTS[k] + "</label></p>";
 	}
