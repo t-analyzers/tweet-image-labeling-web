@@ -1,12 +1,12 @@
 {
-  "name": "nps-tweets",
+  "name": "tweets-image-label-maker",
   "version": "1.0.0",
-  "description": "",
+  "description": "twitter APIで取得したツイート内の画像を表示し、分類ラベルを付与するためのWebアプリです。",
   "main": "index.js",
   "scripts": {
     "test": "dev"
   },
-  "author": "hitoshi",
+  "author": "Hitoshi Furukawa",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.16.0",

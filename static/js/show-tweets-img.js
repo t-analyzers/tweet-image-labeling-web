@@ -2,7 +2,7 @@ var API_URL_TOP = location.protocol + "//" + location.host + "/api/";
 var TWEET_URL_ENDPOINT = API_URL_TOP + "tweets";
 var LABEL_URL_ENDPOINT = API_URL_TOP + "img_label";
 
-var ANNOTATION_LABEL_ELEMENTS = {"illust":"イラスト", "photo":"写真", "text":"文字", "calendar":"カレンダー", "cover":"カバー","placard":"プラカード", "manga":"漫画","capture":"キャプチャ","icon":"アイコン","craft":"ペーパークラフト"};
+var CONTENT_LABEL_ELEMENTS = {"illust":"イラスト", "photo":"写真", "text":"文字", "calendar":"カレンダー", "cover":"カバー","placard":"プラカード", "manga":"漫画","capture":"キャプチャ","icon":"アイコン","craft":"ペーパークラフト"};
 var ADULT_LABEL_ELEMENTS = {"false":"No", "true":"Yes", "possible":"Possible"};
 
 $(document).ready(function(){
@@ -15,8 +15,11 @@ $(document).ready(function(){
 		str_date = q["d"];
 	}else{
 		var d = new Date();
-		d.setDate(d.getDate-1);
-		str_date = (d.getFullYear).toString()+(d.getMonth+1).toString()+(d.getDay).toString();
+		d.setDate(d.getDate()-1);
+		var yyyy = d.getFullYear()+"";
+		var mm = ("0"+(d.getMonth()+1)).substr(-2,2);
+		var dd = ("0"+d.getDate()+"").substr(-2,2);
+		str_date = yyyy+mm+dd;
 	}
 
 	//ツイートと画像を表示する。
@@ -40,6 +43,15 @@ function show_tweets_img(str_date){
 					isIcon = true;
 				}
 				
+				var html_labels = "";
+				//labelsが設定されている場合はその値を取得する
+				if(tweets[i].labels != undefined){
+					labels = tweets[i].labels;
+					for(var j=0; j < labels.length; j++){
+						html_labels += "<div class='chip'>" + CONTENT_LABEL_ELEMENTS[labels[j]] + "</div>";
+					}
+				}
+
 				if(tweets[i].media_url != undefined && tweets[i].retweet == undefined && isIcon == false){ //retweetは除く
 					var html_card = "";
 					var card_title = tweets[i]["user.screen_name"];
@@ -55,10 +67,18 @@ function show_tweets_img(str_date){
 
 					//card-contentのタグ作成
 					html_card += "<div class='card-content'>";
+					html_exist = "";
+					if(tweets[i].labeled != undefined){
+						html_exist = "<i class='material-icons left'>done</i>";
+					}
 					html_card += "<span class='card-title activator grey-text text-darken-4'>"
-						+ "<i class='material-icons right'>textsms</i></span>";
+						+ html_exist + "<i class='material-icons right'>textsms</i></span>";
+					if(html_labels != ""){
+						html_card += html_labels;
 
-					html_card += annotation_form(tweets[i]["twid"]);
+					}
+					
+					html_card += annotation_form(tweets[i]);
 					html_card += "</div>";
 
 					//card-revealのタグ作成
@@ -140,19 +160,34 @@ function show_tweets_img(str_date){
 /**
  * @returns
  */
-function annotation_form(id){
+function annotation_form(tweet){
+	id = tweet["twid"]
+	labels = [];
+	adult = "";
+	if(tweet.labeled != undefined){
+		annotation = tweet["labeled"];
+		labels = annotation["labels"];
+		adult = annotation["adult"];
+	}
 	var html = "<form action='#' data-twid ='" + id + "'>";
 	html += "<p>属性</p>";
-	for(k in ANNOTATION_LABEL_ELEMENTS){
-	    html += "<p><input name='annotation' type='checkbox' class='filled-in' id='" + k + "_" + id + "' value='" + k + "'/>" + 
-      	"<label for='" + k + "_" + id + "'>" + ANNOTATION_LABEL_ELEMENTS[k] + "</label></p>";
+	for(k in CONTENT_LABEL_ELEMENTS){
+		var checked = "";
+		if(labels != undefined && labels.indexOf(k) != -1){ checked = "checked"; }
+	    html += "<p><input name='annotation' type='checkbox' class='filled-in' id='" + k + "_" + id + "' value='" + k + "' " + checked +"/>" + 
+      	"<label for='" + k + "_" + id + "'>" + CONTENT_LABEL_ELEMENTS[k] + "</label></p>";
 	}
 
 	html += "<p>成人向け</p>";
-
 	for(k in ADULT_LABEL_ELEMENTS){
 		var checked = "";
-		if(k=="false"){ checked = "checked='checked'";}
+		var ini_value = "";
+		if(adult != undefined && adult != ""){
+			ini_value = adult;
+		}else{
+			ini_value = "false";
+		}
+		if(k==ini_value){ checked = "checked='checked'";}
 		html += "<p><input name='adult' type='radio' id='" + k + "_" + id + "' value='" + k + "' " + checked + " />" +
 	    	"<label for='" + k + "_" + id + "'>" + ADULT_LABEL_ELEMENTS[k] + "</label></p>";
 	}
@@ -161,10 +196,6 @@ function annotation_form(id){
 
 	html += "</form>";
 	return html;
-}
-
-function update(){
-
 }
 
 /**
